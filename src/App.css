@@ -163,10 +163,12 @@
     visibility: visible;
     overflow: auto;
 }
-.itemLi .fa-chevron-down {
+
+.itemLi svg:first-child {
+  transform: rotate(0deg);
     transition: 0.2s ease;
 }
-.itemLi.active .fa-chevron-down {
+.itemLi.active svg:first-child {
     transform: rotate(180deg);
     transition: 0.2s ease;
 }

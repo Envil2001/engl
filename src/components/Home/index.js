@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { RiDeleteBin6Line } from 'react-icons/ri';
 import { AiOutlineSound } from 'react-icons/ai';
 import { RiArrowDownSLine } from 'react-icons/ri';
+import { AiOutlineEdit } from 'react-icons/ai';
 import { Link } from 'react-router-dom';
-
 
 const initialValues = {
     wordsEng: '',
@@ -20,7 +20,10 @@ const Home = () => {
     const [wordData, setWordData] = useState(initialValues);
     const [words, setWords] = useState([]);
     const [loading, setLoading] = useState(true);
-
+    const [editableUserData, setEditableUserData] = useState({
+        isEdit: false,
+        wordIndex: null
+    })
     
 
     const isFieldFields = wordData.wordRu && wordData.wordsEng;
@@ -40,35 +43,76 @@ const Home = () => {
         e.preventDefault();
 
         if (isFieldFields) {
-            let url = `https://api.dictionaryapi.dev/api/v2/entries/en/${wordData.wordsEng}`;
+            if(editableUserData.isEdit) {
+                let url = `https://api.dictionaryapi.dev/api/v2/entries/en/${wordData.wordsEng}`;
 
-            fetch(url)
-                .then(response => response.json())
-                .then(result => {
+                fetch(url)
+                    .then(response => response.json())
+                    .then(result => {
+    
+                        if (result.title) {
+                            alert(`Can't find the meaning of <span>"${wordData.wordsEng}"</span>. Please, try to search for another word.`);
+                        } else {
+                            const editedData = words;
 
-                    if (result.title) {
-                        alert(`Can't find the meaning of <span>"${wordData.wordsEng}"</span>. Please, try to search for another word.`);
-                    } else {
-                        let adjective = `${result[0].meanings[0].partOfSpeech}  /${result[0].phonetics[0].text}/`;
-                        let definitions = result[0].meanings[0].definitions[0];
-                        let example = result[0].meanings[0].definitions[0].example;
-                        let Synonyms = definitions.synonyms;
+                            let adjective = `${result[0].meanings[0].partOfSpeech}  /${result[0].phonetics[0].text}/`;
+                            let definitions = result[0].meanings[0].definitions[0];
+                            let example = result[0].meanings[0].definitions[0].example;
+                            let Synonyms = definitions.synonyms;
+    
+                            wordData.Adjective = adjective; // имя прилагательное 
+                            wordData.Meaning = definitions.definition; // значения
+                            wordData.Example = example; // примеры
+                            wordData.Synonym = Synonyms; // синонимы
+                            wordData.Audio = "https:" + result[0].phonetics[0].audio; // звук
 
-                        wordData.Adjective = adjective; // имя прилагательное 
-                        wordData.Meaning = definitions.definition; // значения
-                        wordData.Example = example; // примеры
-                        wordData.Synonym = Synonyms; // синонимы
-                        wordData.Audio = "https:" + result[0].phonetics[0].audio; // звук
-                        
-                        setWords((prevState) => [...prevState, wordData]);
+                            editedData.splice(editableUserData.wordIndex, 1, wordData);
+            
+                            setWords(editedData);
+            
+                            setEditableUserData({
+                                isEdit: false,
+                                wordIndex: null
+                            }) 
+                        }
+                    }
+                    )
+                    .catch(() => {
+                        alert(`слово ${wordData.wordsEng} было не найдено. Проверьте на корректность слова`);
+                    });
 
+
+            } else {
+                let url = `https://api.dictionaryapi.dev/api/v2/entries/en/${wordData.wordsEng}`;
+
+                fetch(url)
+                    .then(response => response.json())
+                    .then(result => {
+    
+                        if (result.title) {
+                            alert(`Can't find the meaning of <span>"${wordData.wordsEng}"</span>. Please, try to search for another word.`);
+                        } else {
+                            let adjective = `${result[0].meanings[0].partOfSpeech}  /${result[0].phonetics[0].text}/`;
+                            let definitions = result[0].meanings[0].definitions[0];
+                            let example = result[0].meanings[0].definitions[0].example;
+                            
+                            let Synonyms = definitions.synonyms;
+    
+                            wordData.Adjective = adjective; // имя прилагательное 
+                            wordData.Meaning = definitions.definition; // значения
+                            wordData.Example = example; // примеры
+                            wordData.Synonym = Synonyms; // синонимы
+                            wordData.Audio = "https:" + result[0].phonetics[0].audio; // звук
+                            
+                            setWords((prevState) => [...prevState, wordData]);    
+                        }
                         setWordData(initialValues);
                     }
-                }
-                )
-                .catch(() => {
-                    alert(`слово ${wordData.wordsEng} было не найдено. Проверьте на корректность слова`);
-                });
+                    )
+                    .catch(() => {
+                        alert(`слово ${wordData.wordsEng} было не найдено. Проверьте на корректность слова`);
+                    });
+            }
         } else {
             alert('Заполни поля, идиот')
         }
@@ -78,16 +122,31 @@ const Home = () => {
         plAu.play();
     }
     const handleRemoveClick = (index) => { //Удаление слова
-        setWords(words.filter((word, wordIndex) => {
-            return wordIndex !== index
+        setWords(words.filter((word, indexRemove) => {
+            return indexRemove !== index
         }))
     }
-    const handleMarkTodo = (isMarks, index) => {
+    const handleEditClick = (data, index) => { // редактирование слова
+        setWordData(data);
+        setEditableUserData({
+            isEdit: true,
+            wordIndex: index
+        })
+    }
+    const handleMarkTodo = (isMarks, index) => { // появление меток
         const updatedWord = words.slice();
         updatedWord.splice(index, 1, { ...words[index], more: !isMarks });
         setWords(updatedWord);
     }
-    const handleCleanClick = () => setWordData(initialValues); //Очистка инпута
+    const handleCleanClick = () => {
+        setWordData(initialValues);
+        setEditableUserData({
+            isEdit: false,
+            wordIndex: null
+        })
+    }; //Очистка инпута
+
+
     if (loading) return (
         <div className="centerFixed">
             <div className="contentFix">
@@ -117,7 +176,7 @@ const Home = () => {
                         value={wordData.wordRu}
                     ></input>
                 </div>
-                <button type="submit" disabled={!isFieldFields}>Новое слово</button>
+                <button type="submit" disabled={!isFieldFields}>{editableUserData.isEdit ? 'Редактировать' : 'Новое слово'}</button>
                 <button type="reset" disabled={!isFieldFields}>Очистить</button>
             </form>
 
@@ -135,7 +194,12 @@ const Home = () => {
                                         </div>
                                         <div className="iconContent">
                                             <RiArrowDownSLine onClick={() => handleMarkTodo(word.more, index)} />
-                                            <AiOutlineSound onClick={() => handleAudioClick(word.Audio)}/>
+                                            <AiOutlineEdit onClick={() => handleEditClick(word, index)}/>
+                                            <AiOutlineSound onDoubleClick={() => {
+
+                                                    let pash = new Audio('https://zvukogram.com/mp3/cats/1200/otdai-salo.mp3');
+                                                    pash.play();
+                                            }}  onClick={() => handleAudioClick(word.Audio)}/>
                                             <RiDeleteBin6Line onClick={() => handleRemoveClick(index)} />
 
                                         </div>
