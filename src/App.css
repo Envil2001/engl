@@ -197,7 +197,10 @@
     padding: 0;
     border: 0;
 }
-
+.content_li .bl .list {
+  display: flex;
+  flex-wrap: wrap;
+}
 .synonyms .list span {
     text-decoration: underline;
     font-size: 15px;

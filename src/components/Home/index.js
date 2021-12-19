@@ -58,7 +58,7 @@ const Home = () => {
                             let adjective = `${result[0].meanings[0].partOfSpeech}  /${result[0].phonetics[0].text}/`;
                             let definitions = result[0].meanings[0].definitions[0];
                             let example = result[0].meanings[0].definitions[0].example;
-                            let Synonyms = definitions.synonyms;
+                            let Synonyms = definitions.synonyms.filter(word => word.split(" ").length <= 1);
     
                             wordData.Adjective = adjective; // имя прилагательное 
                             wordData.Meaning = definitions.definition; // значения
@@ -74,6 +74,7 @@ const Home = () => {
                                 isEdit: false,
                                 wordIndex: null
                             }) 
+                            setWordData(initialValues);
                         }
                     }
                     )
@@ -95,9 +96,9 @@ const Home = () => {
                             let adjective = `${result[0].meanings[0].partOfSpeech}  /${result[0].phonetics[0].text}/`;
                             let definitions = result[0].meanings[0].definitions[0];
                             let example = result[0].meanings[0].definitions[0].example;
-                            
-                            let Synonyms = definitions.synonyms;
-    
+                            console.log(definitions.synonyms);
+                            let Synonyms = definitions.synonyms.filter(word => word.split(" ").length <= 1);
+
                             wordData.Adjective = adjective; // имя прилагательное 
                             wordData.Meaning = definitions.definition; // значения
                             wordData.Example = example; // примеры
@@ -225,10 +226,13 @@ const Home = () => {
                                                         word.Synonym.length >= 1 ?
                                                             word.Synonym.map(synonym => {
                                                                 return (
+                                                                    <p>
                                                                     <span key={synonym} onClick={() => setWordData((prevState) => ({
                                                                         ...prevState,
                                                                         wordsEng: synonym
-                                                                    }))}>{synonym},</span>
+                                                                    }))}>{synonym}</span>
+                                                                    ,
+                                                                    </p>
                                                                 )
                                                             })
                                                             :
